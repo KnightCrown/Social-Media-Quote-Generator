@@ -1,12 +1,15 @@
 "use client";
 
+import { ReactNode } from "react";
+
 interface OverlayUploaderProps {
   overlayPreview: string | null;
   disabled?: boolean;
   onOverlaySelected: (file: File | null) => void;
+  children?: ReactNode;
 }
 
-export function OverlayUploader({ overlayPreview, disabled, onOverlaySelected }: OverlayUploaderProps) {
+export function OverlayUploader({ overlayPreview, disabled, onOverlaySelected, children }: OverlayUploaderProps) {
   return (
     <div className="rounded-xl border border-neutral-200 bg-white p-4">
       <div className="mb-3">
@@ -33,6 +36,8 @@ export function OverlayUploader({ overlayPreview, disabled, onOverlaySelected }:
           <p className="text-xs text-neutral-500">No overlay selected</p>
         )}
       </div>
+
+      {children ? <div className="mt-4 space-y-3">{children}</div> : null}
     </div>
   );
 }

@@ -19,6 +19,8 @@ Production-ready Next.js app that bulk processes 5–10 images with a transparen
 - Scale + center crop (no stretching)
 - Per-image processing with progress states
 - Per-image output downloads
+- Output mode selection (Post, Story, or Both)
+- Thumbnail preview with click-to-enlarge before download
 - Bulk ZIP download
 - Basic validation (type, size, max files)
 - Preview thumbnails and queue reordering
@@ -67,8 +69,8 @@ See `.env.example`.
 ## API Routes
 
 - `POST /api/process`
-  - FormData: `image` (JPG/PNG/WEBP), `overlay` (PNG)
-  - Returns two outputs (`story`, `post`) with download URLs
+  - FormData: `image` (JPG/PNG/WEBP), `overlay` (PNG), `outputMode` (`post` | `story` | `both`)
+  - Returns selected outputs with download URLs
 - `GET /api/files/:id`
   - Downloads a generated JPEG by temporary ID
 - `POST /api/download`

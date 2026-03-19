@@ -7,7 +7,7 @@ import { OverlayUploader } from "@/components/overlay-uploader";
 import { ResultsPanel } from "@/components/results-panel";
 import { UploadDropzone } from "@/components/upload-dropzone";
 import { CLIENT_LIMITS } from "@/lib/env";
-import { ProcessImageResponse, ProcessedOutput, QueueItem } from "@/lib/types";
+import { OutputMode, ProcessImageResponse, ProcessedOutput, QueueItem } from "@/lib/types";
 
 const MAX_PARALLEL_REQUESTS = 2;
 
@@ -35,10 +35,16 @@ export default function HomePage() {
   const [overlayPreview, setOverlayPreview] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDownloadingZip, setIsDownloadingZip] = useState(false);
+  const [outputMode, setOutputMode] = useState<OutputMode>("both");
   const [error, setError] = useState<string | null>(null);
 
   const completedCount = useMemo(
     () => queue.filter((item) => item.status === "done").length,
+    [queue],
+  );
+
+  const hasOutputs = useMemo(
+    () => queue.some((item) => (item.outputs?.length ?? 0) > 0),
     [queue],
   );
 
@@ -94,6 +100,7 @@ export default function HomePage() {
     const body = new FormData();
     body.append("image", item.file);
     body.append("overlay", overlayFile);
+    body.append("outputMode", outputMode);
 
     const response = await fetch("/api/process", {
       method: "POST",
@@ -181,6 +188,22 @@ export default function HomePage() {
     }
   };
 
+  const handleDownloadFile = async (file: ProcessedOutput) => {
+    try {
+      const response = await fetch(file.downloadUrl);
+
+      if (!response.ok) {
+        throw new Error("Download failed.");
+      }
+
+      const blob = await response.blob();
+      triggerDownload(blob, file.fileName);
+    } catch (downloadError) {
+      const message = downloadError instanceof Error ? downloadError.message : "Download failed.";
+      setError(message);
+    }
+  };
+
   const moveItem = (id: string, direction: "up" | "down") => {
     setQueue((current) => {
       const index = current.findIndex((item) => item.id === id);
@@ -221,34 +244,89 @@ export default function HomePage() {
       </section>
 
       <section className="grid gap-4 md:grid-cols-[1fr_320px]">
-        <UploadDropzone disabled={isProcessing || queue.length >= CLIENT_LIMITS.maxFiles} onFilesAdded={addImages} />
+        <div className="space-y-3 rounded-xl border border-neutral-200 bg-white p-4">
+          <p className="text-sm font-semibold text-neutral-900">Base images</p>
+          <UploadDropzone
+            disabled={isProcessing || queue.length >= CLIENT_LIMITS.maxFiles}
+            onFilesAdded={addImages}
+          />
+          <ImageQueue items={queue} disabled={isProcessing} onMove={moveItem} onRemove={removeItem} />
+        </div>
         <OverlayUploader
           overlayPreview={overlayPreview}
           disabled={isProcessing}
           onOverlaySelected={handleOverlaySelected}
-        />
-      </section>
+        >
+          <fieldset className="rounded-xl border border-neutral-200 bg-white p-3">
+            <legend className="px-1 text-xs font-medium text-neutral-600">Create outputs</legend>
+            <div className="mt-1 flex flex-wrap gap-4 text-sm text-neutral-800">
+              <label className="inline-flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="outputMode"
+                  value="post"
+                  checked={outputMode === "post"}
+                  onChange={() => setOutputMode("post")}
+                  disabled={isProcessing}
+                />
+                Post images
+              </label>
+              <label className="inline-flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="outputMode"
+                  value="story"
+                  checked={outputMode === "story"}
+                  onChange={() => setOutputMode("story")}
+                  disabled={isProcessing}
+                />
+                Story images
+              </label>
+              <label className="inline-flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="outputMode"
+                  value="both"
+                  checked={outputMode === "both"}
+                  onChange={() => setOutputMode("both")}
+                  disabled={isProcessing}
+                />
+                Both
+              </label>
+            </div>
+          </fieldset>
 
-      <section className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-neutral-700">
-            {queue.length} image(s) selected • {completedCount} completed
-          </p>
           <button
             type="button"
             onClick={processQueue}
             disabled={isProcessing || queue.length === 0 || !overlayFile}
-            className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+            className="w-full rounded-lg bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
           >
             {isProcessing ? "Processing..." : "Process Images"}
           </button>
-        </div>
-        <ImageQueue items={queue} disabled={isProcessing} onMove={moveItem} onRemove={removeItem} />
+        </OverlayUploader>
+      </section>
+
+      <section className="space-y-3">
+        <p className="text-sm text-neutral-700">
+          {queue.length} image(s) selected • {completedCount} completed
+        </p>
+        {hasOutputs ? (
+          <ResultsPanel
+            items={queue}
+            isDownloadingZip={isDownloadingZip}
+            onDownloadZip={handleDownloadZip}
+            onDownloadFile={handleDownloadFile}
+          />
+        ) : (
+          <div className="rounded-xl border border-neutral-200 bg-white p-6 text-center text-sm text-neutral-500">
+            Process images to see output previews and download options.
+          </div>
+        )}
       </section>
 
       {error ? <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p> : null}
 
-      <ResultsPanel items={queue} isDownloadingZip={isDownloadingZip} onDownloadZip={handleDownloadZip} />
     </main>
   );
 }

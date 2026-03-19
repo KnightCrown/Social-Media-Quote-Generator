@@ -1,4 +1,5 @@
 import { SERVER_LIMITS } from "@/lib/env";
+import { OutputMode } from "@/lib/types";
 
 const IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 const OVERLAY_MIME_TYPES = new Set(["image/png"]);
@@ -33,4 +34,12 @@ export const validateQueueCount = (count: number) => {
   if (count > SERVER_LIMITS.maxFiles) {
     throw new Error(`Upload up to ${SERVER_LIMITS.maxFiles} images per batch.`);
   }
+};
+
+export const validateOutputMode = (value: FormDataEntryValue | null): OutputMode => {
+  if (value === "story" || value === "post" || value === "both") {
+    return value;
+  }
+
+  return "both";
 };

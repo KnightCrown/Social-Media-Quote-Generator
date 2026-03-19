@@ -4,7 +4,7 @@ import { SERVER_LIMITS } from "@/lib/env";
 import { OUTPUT_PRESETS, processWithOverlay } from "@/lib/image";
 import { cleanupExpiredFiles, saveTempJpeg } from "@/lib/temp-storage";
 import { ProcessImageResponse } from "@/lib/types";
-import { validateBaseImage, validateOverlay } from "@/lib/validation";
+import { validateBaseImage, validateOutputMode, validateOverlay } from "@/lib/validation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const image = formData.get("image");
     const overlay = formData.get("overlay");
+    const outputMode = validateOutputMode(formData.get("outputMode"));
 
     if (!(image instanceof File) || !(overlay instanceof File)) {
       return NextResponse.json({ error: "Image and overlay are required." }, { status: 400 });
@@ -29,7 +30,10 @@ export async function POST(request: NextRequest) {
 
     const outputs: ProcessImageResponse["outputs"] = [];
 
-    for (const preset of OUTPUT_PRESETS) {
+    const selectedPresets =
+      outputMode === "both" ? OUTPUT_PRESETS : OUTPUT_PRESETS.filter((preset) => preset.kind === outputMode);
+
+    for (const preset of selectedPresets) {
       const finalBuffer = await processWithOverlay(
         baseBuffer,
         overlayBuffer,

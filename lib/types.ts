@@ -1,4 +1,5 @@
 export type OutputKind = "story" | "post";
+export type OutputMode = OutputKind | "both";
 
 export type QueueStatus = "idle" | "processing" | "done" | "error";
 
