@@ -50,7 +50,7 @@ export function UploadDropzone({ disabled, onFilesAdded }: UploadDropzoneProps) 
         onChange={(event) => handleFiles(event.target.files)}
       />
       <p className="text-base font-medium text-neutral-900">Drop images here or click to upload</p>
-      <p className="mt-1 text-sm text-neutral-500">JPG, PNG, WEBP • up to 10 files</p>
+      <p className="mt-1 text-sm text-neutral-500">JPG, PNG, WEBP • up to 20 files</p>
     </label>
   );
 }

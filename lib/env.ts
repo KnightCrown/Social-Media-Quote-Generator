@@ -4,7 +4,7 @@ const toInt = (value: string | undefined, fallback: number) => {
 };
 
 export const SERVER_LIMITS = {
-  maxFiles: toInt(process.env.MAX_FILES, 10),
+  maxFiles: toInt(process.env.MAX_FILES, 20),
   maxFileSizeMb: toInt(process.env.MAX_FILE_SIZE_MB, 15),
   maxOverlaySizeMb: toInt(process.env.MAX_OVERLAY_SIZE_MB, 10),
   jpegQuality: toInt(process.env.OUTPUT_JPEG_QUALITY, 90),

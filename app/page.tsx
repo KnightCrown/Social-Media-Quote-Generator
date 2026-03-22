@@ -238,7 +238,7 @@ export default function HomePage() {
       <section className="space-y-2">
         <h1 className="text-2xl font-semibold text-neutral-900">Social Media Image Overlay Generator</h1>
         <p className="text-sm text-neutral-600">
-          Upload 5–10 images, apply one transparent PNG overlay, and export Instagram Story (1080×1920)
+          Upload up to 20 images, apply one transparent PNG overlay, and export Instagram Story (1080×1920)
           and Post (1080×1080) versions.
         </p>
       </section>

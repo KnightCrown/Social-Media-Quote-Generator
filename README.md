@@ -1,6 +1,6 @@
 # Social Media Quote Generator
 
-Production-ready Next.js app that bulk processes 5–10 images with a transparent PNG overlay and exports:
+Production-ready Next.js app that bulk processes up to 20 images with a transparent PNG overlay and exports:
 
 - Instagram Story: 1080 x 1920
 - Instagram Post: 1080 x 1080
@@ -51,7 +51,7 @@ Open http://localhost:3000
 
 See `.env.example`.
 
-- `MAX_FILES`: Max uploaded images per batch (default `10`)
+- `MAX_FILES`: Max uploaded images per batch (default `20`)
 - `MAX_FILE_SIZE_MB`: Max size per base image (default `15`)
 - `MAX_OVERLAY_SIZE_MB`: Max size for overlay PNG (default `10`)
 - `OUTPUT_JPEG_QUALITY`: JPEG export quality (default `90`)
