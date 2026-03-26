@@ -5,9 +5,9 @@ export const OUTPUT_PRESETS = [
   { kind: "post" as const, width: 1080, height: 1080 },
 ];
 
-export const processWithOverlay = async (
+export const processImage = async (
   baseInput: Buffer,
-  overlayInput: Buffer,
+  overlayInput: Buffer | null,
   width: number,
   height: number,
   quality: number,
@@ -20,6 +20,12 @@ export const processWithOverlay = async (
       withoutEnlargement: false,
     })
     .toBuffer();
+
+  if (!overlayInput) {
+    return sharp(resizedBase)
+      .jpeg({ quality, mozjpeg: true })
+      .toBuffer();
+  }
 
   const resizedOverlay = await sharp(overlayInput)
     .rotate()

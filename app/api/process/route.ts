@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { SERVER_LIMITS } from "@/lib/env";
-import { OUTPUT_PRESETS, processWithOverlay } from "@/lib/image";
+import { OUTPUT_PRESETS, processImage } from "@/lib/image";
 import { cleanupExpiredFiles, saveTempJpeg } from "@/lib/temp-storage";
 import { ProcessImageResponse } from "@/lib/types";
 import { validateBaseImage, validateOutputMode, validateOverlay } from "@/lib/validation";
@@ -18,15 +18,19 @@ export async function POST(request: NextRequest) {
     const overlay = formData.get("overlay");
     const outputMode = validateOutputMode(formData.get("outputMode"));
 
-    if (!(image instanceof File) || !(overlay instanceof File)) {
-      return NextResponse.json({ error: "Image and overlay are required." }, { status: 400 });
+    if (!(image instanceof File)) {
+      return NextResponse.json({ error: "Image is required." }, { status: 400 });
     }
 
     validateBaseImage(image);
-    validateOverlay(overlay);
+    if (overlay instanceof File) {
+      validateOverlay(overlay);
+    } else if (overlay !== null) {
+      return NextResponse.json({ error: "Overlay must be a PNG file." }, { status: 400 });
+    }
 
     const baseBuffer = Buffer.from(await image.arrayBuffer());
-    const overlayBuffer = Buffer.from(await overlay.arrayBuffer());
+    const overlayBuffer = overlay instanceof File ? Buffer.from(await overlay.arrayBuffer()) : null;
 
     const outputs: ProcessImageResponse["outputs"] = [];
 
@@ -34,7 +38,7 @@ export async function POST(request: NextRequest) {
       outputMode === "both" ? OUTPUT_PRESETS : OUTPUT_PRESETS.filter((preset) => preset.kind === outputMode);
 
     for (const preset of selectedPresets) {
-      const finalBuffer = await processWithOverlay(
+      const finalBuffer = await processImage(
         baseBuffer,
         overlayBuffer,
         preset.width,

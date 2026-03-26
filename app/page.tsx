@@ -31,6 +31,7 @@ const triggerDownload = (blob: Blob, fileName: string) => {
 
 export default function HomePage() {
   const [queue, setQueue] = useState<QueueItem[]>([]);
+  const [useOverlay, setUseOverlay] = useState(true);
   const [overlayFile, setOverlayFile] = useState<File | null>(null);
   const [overlayPreview, setOverlayPreview] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -91,7 +92,7 @@ export default function HomePage() {
   };
 
   const processOneImage = async (item: QueueItem) => {
-    if (!overlayFile) {
+    if (useOverlay && !overlayFile) {
       throw new Error("Overlay is required.");
     }
 
@@ -99,7 +100,9 @@ export default function HomePage() {
 
     const body = new FormData();
     body.append("image", item.file);
-    body.append("overlay", overlayFile);
+    if (useOverlay && overlayFile) {
+      body.append("overlay", overlayFile);
+    }
     body.append("outputMode", outputMode);
 
     const response = await fetch("/api/process", {
@@ -122,7 +125,7 @@ export default function HomePage() {
   const processQueue = async () => {
     setError(null);
 
-    if (!overlayFile) {
+    if (useOverlay && !overlayFile) {
       setError("Upload an overlay PNG before processing.");
       return;
     }
@@ -238,8 +241,8 @@ export default function HomePage() {
       <section className="space-y-2">
         <h1 className="text-2xl font-semibold text-neutral-900">Social Media Image Overlay Generator</h1>
         <p className="text-sm text-neutral-600">
-          Upload up to 20 images, apply one transparent PNG overlay, and export Instagram Story (1080×1920)
-          and Post (1080×1080) versions.
+          Upload up to 20 images and export Instagram Story (1080×1920)
+          and Post (1080×1080) versions, with or without a transparent PNG overlay.
         </p>
       </section>
 
@@ -252,11 +255,42 @@ export default function HomePage() {
           />
           <ImageQueue items={queue} disabled={isProcessing} onMove={moveItem} onRemove={removeItem} />
         </div>
-        <OverlayUploader
-          overlayPreview={overlayPreview}
-          disabled={isProcessing}
-          onOverlaySelected={handleOverlaySelected}
-        >
+
+        <div className="space-y-3">
+          <fieldset className="rounded-xl border border-neutral-200 bg-white p-3">
+            <legend className="px-1 text-xs font-medium text-neutral-600">Overlay option</legend>
+            <div className="mt-1 flex flex-col gap-2 text-sm text-neutral-800">
+              <label className="inline-flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="overlayMode"
+                  checked={useOverlay}
+                  onChange={() => setUseOverlay(true)}
+                  disabled={isProcessing}
+                />
+                Use overlay
+              </label>
+              <label className="inline-flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="overlayMode"
+                  checked={!useOverlay}
+                  onChange={() => setUseOverlay(false)}
+                  disabled={isProcessing}
+                />
+                No overlay (resize only)
+              </label>
+            </div>
+          </fieldset>
+
+          {useOverlay ? (
+            <OverlayUploader
+              overlayPreview={overlayPreview}
+              disabled={isProcessing}
+              onOverlaySelected={handleOverlaySelected}
+            />
+          ) : null}
+
           <fieldset className="rounded-xl border border-neutral-200 bg-white p-3">
             <legend className="px-1 text-xs font-medium text-neutral-600">Create outputs</legend>
             <div className="mt-1 flex flex-wrap gap-4 text-sm text-neutral-800">
@@ -299,12 +333,12 @@ export default function HomePage() {
           <button
             type="button"
             onClick={processQueue}
-            disabled={isProcessing || queue.length === 0 || !overlayFile}
+            disabled={isProcessing || queue.length === 0 || (useOverlay && !overlayFile)}
             className="w-full rounded-lg bg-black px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
           >
             {isProcessing ? "Processing..." : "Process Images"}
           </button>
-        </OverlayUploader>
+        </div>
       </section>
 
       <section className="space-y-3">
