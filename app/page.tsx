@@ -207,24 +207,6 @@ export default function HomePage() {
     }
   };
 
-  const moveItem = (id: string, direction: "up" | "down") => {
-    setQueue((current) => {
-      const index = current.findIndex((item) => item.id === id);
-      if (index === -1) {
-        return current;
-      }
-
-      const target = direction === "up" ? index - 1 : index + 1;
-      if (target < 0 || target >= current.length) {
-        return current;
-      }
-
-      const copy = [...current];
-      [copy[index], copy[target]] = [copy[target], copy[index]];
-      return copy;
-    });
-  };
-
   const removeItem = (id: string) => {
     setQueue((current) => {
       const found = current.find((item) => item.id === id);
@@ -234,6 +216,14 @@ export default function HomePage() {
 
       return current.filter((item) => item.id !== id);
     });
+  };
+
+  const clearAllItems = () => {
+    setQueue((current) => {
+      current.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+      return [];
+    });
+    setError(null);
   };
 
   return (
@@ -248,12 +238,22 @@ export default function HomePage() {
 
       <section className="grid gap-4 md:grid-cols-[1fr_320px]">
         <div className="space-y-3 rounded-xl border border-neutral-200 bg-white p-4">
-          <p className="text-sm font-semibold text-neutral-900">Base images</p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-semibold text-neutral-900">Base images</p>
+            <button
+              type="button"
+              onClick={clearAllItems}
+              disabled={isProcessing || queue.length === 0}
+              className="rounded-md border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 disabled:opacity-40"
+            >
+              Clear all
+            </button>
+          </div>
           <UploadDropzone
             disabled={isProcessing || queue.length >= CLIENT_LIMITS.maxFiles}
             onFilesAdded={addImages}
           />
-          <ImageQueue items={queue} disabled={isProcessing} onMove={moveItem} onRemove={removeItem} />
+          <ImageQueue items={queue} disabled={isProcessing} onRemove={removeItem} />
         </div>
 
         <div className="space-y-3">

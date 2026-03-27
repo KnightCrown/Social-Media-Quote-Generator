@@ -13,6 +13,14 @@ interface ResultsPanelProps {
 
 export function ResultsPanel({ items, isDownloadingZip, onDownloadZip, onDownloadFile }: ResultsPanelProps) {
   const allOutputs = items.flatMap((item) => item.outputs ?? []);
+  const resultsBySource = items
+    .filter((item) => item.outputs && item.outputs.length > 0)
+    .flatMap((item) =>
+      (item.outputs ?? []).map((output) => ({
+        output,
+        sourceName: item.file.name,
+      })),
+    );
   const [previewOutput, setPreviewOutput] = useState<ProcessedOutput | null>(null);
 
   if (allOutputs.length === 0) {
@@ -33,43 +41,35 @@ export function ResultsPanel({ items, isDownloadingZip, onDownloadZip, onDownloa
         </button>
       </div>
 
-      <ul className="space-y-3">
-        {items
-          .filter((item) => item.outputs && item.outputs.length > 0)
-          .map((item) => (
-            <li key={item.id} className="rounded-lg border border-neutral-200 p-3">
-              <p className="truncate text-sm font-medium text-neutral-900">{item.file.name}</p>
-              <div className="mt-2 flex flex-wrap gap-4">
-                {item.outputs?.map((output) => (
-                  <div key={output.id} className="space-y-2">
-                    <button
-                      type="button"
-                      onClick={() => setPreviewOutput(output)}
-                      className="block rounded-md border border-neutral-300 p-1 hover:bg-neutral-100"
-                      aria-label={`Preview ${output.fileName}`}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={output.downloadUrl}
-                        alt={output.fileName}
-                        className="h-28 w-28 rounded object-cover"
-                      />
-                    </button>
-                    <p className="text-xs text-neutral-600">
-                      {output.kind === "story" ? "Story 1080×1920" : "Post 1080×1080"}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => onDownloadFile(output)}
-                      className="w-full rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium text-neutral-800 hover:bg-neutral-100"
-                    >
-                      Download image
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </li>
-          ))}
+      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {resultsBySource.map(({ output, sourceName }) => (
+          <li key={output.id} className="rounded-lg border border-neutral-200 p-3">
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => setPreviewOutput(output)}
+                className="block w-full rounded-md border border-neutral-300 p-1 hover:bg-neutral-100"
+                aria-label={`Preview ${output.fileName}`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={output.downloadUrl} alt={output.fileName} className="h-36 w-full rounded object-cover" />
+              </button>
+              <p className="truncate text-xs font-medium text-neutral-800" title={sourceName}>
+                {sourceName}
+              </p>
+              <p className="text-xs text-neutral-600">
+                {output.kind === "story" ? "Story 1080×1920" : "Post 1080×1080"}
+              </p>
+              <button
+                type="button"
+                onClick={() => onDownloadFile(output)}
+                className="w-full rounded-md border border-neutral-300 px-3 py-1.5 text-xs font-medium text-neutral-800 hover:bg-neutral-100"
+              >
+                Download image
+              </button>
+            </div>
+          </li>
+        ))}
       </ul>
 
       {previewOutput ? (
